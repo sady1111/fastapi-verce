@@ -1,14 +1,9 @@
 {
+  "version": 2,
+  "builds": [
+    { "src": "api/index.py", "use": "@vercel/python" }
+  ],
   "routes": [
-    {
-      "src": "/call",
-      "methods": ["POST"],
-      "dest": "/index.py"
-    },
-    {
-      "src": "/",
-      "methods": ["GET"],
-      "dest": "/index.py"
-    }
+    { "src": "/(.*)", "dest": "api/index.py" }
   ]
 }
