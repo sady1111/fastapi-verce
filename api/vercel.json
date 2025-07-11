@@ -1,0 +1,14 @@
+{
+  "routes": [
+    {
+      "src": "/call",
+      "methods": ["POST"],
+      "dest": "/index.py"
+    },
+    {
+      "src": "/",
+      "methods": ["GET"],
+      "dest": "/index.py"
+    }
+  ]
+}
