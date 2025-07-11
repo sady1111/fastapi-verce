@@ -4,10 +4,11 @@ import os
 
 app = FastAPI()
 
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
-TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
-TWILIO_NUMBER = os.getenv("TWILIO_NUMBER")
+# Load environment variables
+OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
+TWILIO_ACCOUNT_SID = os.environ.get("TWILIO_ACCOUNT_SID")
+TWILIO_AUTH_TOKEN = os.environ.get("TWILIO_AUTH_TOKEN")
+TWILIO_NUMBER = os.environ.get("TWILIO_NUMBER")
 
 client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
 
