@@ -46,7 +46,6 @@ async def step2(request: Request):
     data = await request.form()
     speech = data.get("SpeechResult", "").lower()
 
-    # You can improve this with more categories
     if any(x in speech for x in ["road", "car", "traffic", "vehicle"]):
         category = "Road Traffic Accident"
     elif "work" in speech:
@@ -70,7 +69,6 @@ async def step3(request: Request):
     data = await request.form()
     speech = data.get("SpeechResult", "").lower()
 
-    # Simplified date handling
     try:
         today = datetime.date(2025, 8, 1)
         accident_date = datetime.datetime.strptime(speech, "%d %B %Y").date()
@@ -79,7 +77,7 @@ async def step3(request: Request):
         if accident_date < six_months_ago or accident_date > today:
             return Response(content="""
             <Response>
-                <Say>Unfortunately, we are only handling accidents that happened in the last 6 months. Thank you and goodbye.</Say>
+                <Say>Unfortunately, we are only handling accidents that happened in the last 6 months before August 2025. Thank you and goodbye.</Say>
                 <Hangup/>
             </Response>
             """.strip(), media_type="application/xml")
@@ -92,7 +90,6 @@ async def step3(request: Request):
         </Response>
         """.strip(), media_type="application/xml")
 
-    # Proceed to questions
     response = """
     <Response>
         <Gather input="speech" action="/step4" method="POST">
