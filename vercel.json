@@ -8,13 +8,7 @@
   ],
   "routes": [
     {
-      "src": "/voice",
-      "methods": ["POST"],
-      "dest": "index.py"
-    },
-    {
-      "src": "/",
-      "methods": ["GET"],
+      "src": "/(.*)",
       "dest": "index.py"
     }
   ]
