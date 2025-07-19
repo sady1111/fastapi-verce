@@ -1,45 +1,41 @@
 from fastapi import FastAPI, Request
-from fastapi.responses import PlainTextResponse
-from twilio.twiml.voice_response import VoiceResponse
+from pydantic import BaseModel
+from fastapi.responses import JSONResponse
 from twilio.rest import Client
 import os
-import openai
-
-# Twilio credentials
-TWILIO_ACCOUNT_SID = "AC312ed40bc95fecde9f15a8083cc2e257"
-TWILIO_AUTH_TOKEN = "9a2de14abf9bbae4adec1566e8994476"
-TWILIO_FROM_NUMBER = "+447412403311"
-
-# OpenAI key
-openai.api_key = "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"
 
 app = FastAPI()
 
+# Load Twilio credentials from environment or hardcode them (for testing only)
+TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID", "your_account_sid_here")
+TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN", "your_auth_token_here")
+TWILIO_PHONE_NUMBER = os.getenv("TWILIO_PHONE_NUMBER", "+1234567890")  # Your Twilio number
+
+client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
+
+class CallRequest(BaseModel):
+    to: str
+
 @app.post("/call")
-async def make_call():
-    client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
-    call = client.calls.create(
-        twiml='<Response><Say voice="alice">Hello, this is Sofia from Legal Assist. Can you tell me if you had an accident recently?</Say></Response>',
-        to="+447514115780",  # Replace with recipient number
-        from_=TWILIO_FROM_NUMBER
-    )
-    return {"status": "initiated", "sid": call.sid}
+async def initiate_call(call_request: CallRequest):
+    try:
+        call = client.calls.create(
+            to=call_request.to,
+            from_=TWILIO_PHONE_NUMBER,
+            url="https://fastapi-vercel-git-main-saddams-projects-44ca5472.vercel.app/voice"
+        )
+        return {"status": "initiated", "sid": call.sid}
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
 
 @app.post("/voice")
 async def voice_response(request: Request):
-    form = await request.form()
-    user_input = form.get("SpeechResult") or ""
-
-    # Get response from OpenAI
-    completion = openai.ChatCompletion.create(
-        model="gpt-4",
-        messages=[
-            {"role": "system", "content": "You're Sofia from Legal Assist, helping users with personal injury claims."},
-            {"role": "user", "content": user_input}
-        ]
-    )
-    reply = completion.choices[0].message.content
-
-    response = VoiceResponse()
-    response.say(reply, voice="Polly.Joanna", language="en-GB")
-    return PlainTextResponse(str(response), media_type="application/xml")
+    # TwiML XML response
+    twiml = """
+    <Response>
+        <Say voice="Polly.Amy" language="en-GB">
+            Hello, this is Sofia from Legal Assist. I'm here to ask a few quick questions about a recent accident or injury.
+        </Say>
+    </Response>
+    """
+    return Response(content=twiml, media_type="application/xml")
