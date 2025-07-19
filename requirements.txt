@@ -1,3 +1,2 @@
 fastapi
-twilio
-mangum
+openai
