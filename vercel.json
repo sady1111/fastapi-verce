@@ -1,24 +1,14 @@
 {
-  "version": 2,
   "builds": [
     {
       "src": "index.py",
-      "use": "@vercel/python",
-      "config": {
-        "maxLambdaSize": "50mb",
-        "runtime": "python3.11"
-      }
+      "use": "@vercel/python"
     }
   ],
   "routes": [
     {
       "src": "/call",
       "methods": ["POST"],
-      "dest": "index.py"
-    },
-    {
-      "src": "/.*",
-      "status": 404,
       "dest": "index.py"
     }
   ]
