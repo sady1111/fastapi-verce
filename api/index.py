@@ -1,50 +1,46 @@
 from fastapi import FastAPI, Request
-from fastapi.responses import Response
+from fastapi.responses import PlainTextResponse
 import openai
+from twilio.twiml.voice_response import VoiceResponse
+import os
 
 app = FastAPI()
 
+# Replace with your actual OpenAI API key
 openai.api_key = "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"
 
-@app.get("/")
-async def root():
-    return {"message": "UK Personal Injury Bot Active - Legal Assist"}
+@app.post("/voice")
+async def voice(request: Request):
+    form = await request.form()
+    user_speech = form.get("SpeechResult", "")
 
-@app.post("/call")
-async def voice_bot(request: Request):
-    form_data = await request.form()
-    user_input = form_data.get("SpeechResult", "")
+    if not user_speech:
+        response = VoiceResponse()
+        response.say("Hello, this is Sofia from Legal Assist. Can I ask if you’ve had any kind of accident or injury in the last six months before August 2025?")
+        response.gather(input="speech", timeout=5)
+        return PlainTextResponse(str(response), media_type="application/xml")
+
+    # Talk to OpenAI
+    prompt = f"User said: {user_speech}\nYou are Sofia, a helpful virtual assistant for UK personal injury claims. Respond in a polite and helpful way, gather full accident information, and determine if user is eligible."
     
-    # Initial greeting or continue conversation
-    if not user_input:
-        prompt = (
-            "You are Sofia, a friendly voice assistant working for Legal Assist. "
-            "Call the person and say: 'Hello, this is Sofia from Legal Assist, calling about your personal injury claim. "
-            "Have you had a road traffic accident or work-related injury in the past 6 months before August 2025?'"
+    try:
+        reply = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": "You are Sofia, a kind and smart legal assistant who helps gather accident information."},
+                {"role": "user", "content": user_speech}
+            ],
+            temperature=0.6
         )
-    else:
-        prompt = (
-            f"You are Sofia from Legal Assist. The caller said: '{user_input}'. "
-            "Reply naturally as if you are a real human assistant handling their injury claim. "
-            "Gather details like accident date, injury type, third-party involvement, and if a medical checkup happened. "
-            "Ask relevant follow-up questions and handle objections. If they’re eligible, say a solicitor will call them soon."
-        )
+        response_text = reply['choices'][0]['message']['content']
+    except Exception as e:
+        response_text = "An application error has occurred. Please try again later."
 
-    response = openai.ChatCompletion.create(
-        model="gpt-4o",
-        messages=[{"role": "user", "content": prompt}],
-        temperature=0.7,
-    )
+    response = VoiceResponse()
+    response.say(response_text)
+    response.gather(input="speech", timeout=5)
+    return PlainTextResponse(str(response), media_type="application/xml")
 
-    gpt_reply = response.choices[0].message["content"]
-
-    twiml = f"""
-    <Response>
-        <Gather input="speech" timeout="3" speechTimeout="auto" action="/call" method="POST">
-            <Say>{gpt_reply}</Say>
-        </Gather>
-        <Say>Sorry, I didn't catch that. Goodbye!</Say>
-    </Response>
-    """
-
-    return Response(content=twiml.strip(), media_type="application/xml")
+@app.get("/")
+def home():
+    return {"message": "UK Personal Injury Bot Active - Legal Assist"}
