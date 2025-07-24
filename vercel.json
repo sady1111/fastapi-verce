@@ -7,9 +7,9 @@
   ],
   "routes": [
     {
-      "src": "/call",
-      "methods": ["POST"],
+      "src": "/(.*)",
       "dest": "index.py"
     }
   ]
 }
+
