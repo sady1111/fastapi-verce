@@ -2,18 +2,15 @@
   "version": 2,
   "builds": [
     {
-      "src": "index.py",
-      "use": "@vercel/python",
-      "config": {
-        "maxLambdaSize": "50mb"
-      }
+      "src": "api/index.py",
+      "use": "@vercel/python"
     }
   ],
   "routes": [
     {
       "src": "/voice",
       "methods": ["POST"],
-      "dest": "index.py"
+      "dest": "api/index.py"
     }
   ]
 }
