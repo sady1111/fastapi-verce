@@ -8,8 +8,7 @@
   ],
   "routes": [
     {
-      "src": "/voice",
-      "methods": ["POST"],
+      "src": "/(.*)",
       "dest": "api/index.py"
     }
   ]
