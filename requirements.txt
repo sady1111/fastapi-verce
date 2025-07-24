@@ -1,3 +1,6 @@
 fastapi
-openai
 uvicorn
+openai
+python-dotenv
+twilio
+requests
