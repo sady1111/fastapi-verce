@@ -14,7 +14,6 @@ conversation_history = {}
 
 @app.post("/voice")
 async def voice_webhook(request: Request):
-
     form = await request.form()
     user_input = form.get("SpeechResult")
     call_sid = form.get("CallSid") or "unknown"
