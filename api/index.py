@@ -12,9 +12,8 @@ openai.api_key = os.getenv("sk-proj-VTBSgPwW5UYehdLsgSfqcKDrNRtxEtWE9xoVrBsBGx5O
 # Temporary in-memory store for conversation history per CallSid
 conversation_history = {}
 
-@app.get("/")
-def home():
-    return {"message": "Sofia is online."}
+@app.post("/voice")
+async def voice_webhook(request: Request):
 
     form = await request.form()
     user_input = form.get("SpeechResult")
