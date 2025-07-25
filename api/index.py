@@ -5,69 +5,61 @@ import os
 
 app = FastAPI()
 
-# Load OpenAI API key from environment variable
-openai.api_key = os.getenv("OPENAI_API_KEY")
-
-# Replace with your actual Vercel domain (no trailing slash)
-VERCEL_DOMAIN = "https://fastapi-vercel-murex.vercel.app"
+# Set your OpenAI API key directly here (not recommended for production)
+openai.api_key = "sk-proj-REPLACE-WITH-YOUR-KEY"
 
 @app.get("/")
 def root():
     return {"message": "Voice bot is running on Vercel."}
 
-
 @app.post("/api/call")
 def call_handler():
-    # Initial Twilio response to start the conversation
-    twiml = f"""
+    # Twilio calls this endpoint when call starts
+    twiml = """
     <Response>
-        <Gather input="speech" action="{VERCEL_DOMAIN}/api/response" method="POST" timeout="5">
+        <Gather input="speech" speechTimeout="auto" timeout="8" action="/api/response" method="POST">
             <Say voice="Polly.Joanna" language="en-GB">
                 Hello! This is Sofia from Legal Assist. Have you had an accident in the last six months?
             </Say>
         </Gather>
-        <Say>I didn’t catch that. Goodbye.</Say>
+        <Say voice="Polly.Joanna" language="en-GB">
+            I didn’t catch that. A solicitor will call you shortly. Goodbye.
+        </Say>
     </Response>
     """
     return Response(content=twiml.strip(), media_type="application/xml")
-
 
 @app.post("/api/response")
 async def process_response(request: Request):
     try:
         form = await request.form()
+        print("🔍 Received form:", dict(form))  # DEBUG LOG
         user_input = form.get("SpeechResult", "").strip()
-        print("User said:", user_input)
+        print("🎤 User said:", user_input)
 
-        # Fallback if no speech detected
         if not user_input:
             twiml = """
             <Response>
                 <Say voice="Polly.Joanna" language="en-GB">
-                    Sorry, I didn't hear your response. A solicitor will call you shortly. Goodbye.
+                    Sorry, I didn’t hear your response. A solicitor will call you shortly. Goodbye.
                 </Say>
             </Response>
             """
             return Response(content=twiml.strip(), media_type="application/xml")
 
-        # Ask OpenAI GPT how Sofia should respond
+        # Generate AI reply using OpenAI
         gpt_response = openai.ChatCompletion.create(
-            model="gpt-4",  # or use "gpt-3.5-turbo" if needed
+            model="gpt-4",
             messages=[
-                {
-                    "role": "system",
-                    "content": "You are Sofia, a friendly and professional legal assistant helping clients with personal injury claims in the UK. Answer clearly and briefly."
-                },
-                {
-                    "role": "user",
-                    "content": f"The client said: '{user_input}'. How should Sofia respond professionally in one or two sentences before ending the call?"
-                }
+                {"role": "system", "content": "You are Sofia, a friendly legal assistant from Legal Assist. You help people with accident and injury claims."},
+                {"role": "user", "content": f"The client said: '{user_input}'. How should Sofia respond in one or two friendly and professional sentences?"}
             ]
         )
         reply = gpt_response['choices'][0]['message']['content'].strip()
-        print("GPT reply:", reply)
 
-        # Final TwiML response
+        print("💬 GPT reply:", reply)  # DEBUG LOG
+
+        # Respond to Twilio
         twiml = f"""
         <Response>
             <Say voice="Polly.Joanna" language="en-GB">
@@ -78,7 +70,7 @@ async def process_response(request: Request):
         return Response(content=twiml.strip(), media_type="application/xml")
 
     except Exception as e:
-        print("Error:", e)
+        print("❌ Error occurred:", str(e))  # DEBUG LOG
         twiml = """
         <Response>
             <Say voice="Polly.Joanna" language="en-GB">
