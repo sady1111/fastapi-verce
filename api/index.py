@@ -20,7 +20,9 @@ def call_handler():
         <Gather input="speech" speechTimeout="auto" timeout="8" action="/api/response" method="POST">
             <Say voice="Polly.Joanna" language="en-GB">
                 Hello! This is Sofia from Legal Assist. Have you had an accident in the last six months?
-         <Say voice="Polly.Joanna" language="en-GB">
+            </Say>
+        </Gather>
+        <Say voice="Polly.Joanna" language="en-GB">
             I didn’t catch that. A solicitor will call you shortly. Goodbye.
         </Say>
     </Response>
