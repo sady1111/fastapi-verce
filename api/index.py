@@ -1,11 +1,12 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import Response
+import os
 import openai
 
 app = FastAPI()
 
-# WARNING: This is your actual API key. Do not expose this in public or shared repos.
-openai.api_key = "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"
+# Load your OpenAI API key from environment
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
 @app.get("/")
 def root():
@@ -13,39 +14,23 @@ def root():
 
 @app.post("/api/call")
 async def call_handler(request: Request):
-    body = await request.form()
+    # Step 1: Get a GPT-generated message (simulate Sofia speaking)
+    try:
+        gpt_response = openai.ChatCompletion.create(
+            model="gpt-4",
+            messages=[
+                {"role": "system", "content": "You are Sofia, a helpful assistant for personal injury claims."},
+                {"role": "user", "content": "Start the call professionally and ask if the user had an accident within the last six months."}
+            ]
+        )
+        message = gpt_response["choices"][0]["message"]["content"]
+    except Exception as e:
+        message = "Hello! This is Sofia from Legal Assist. Did you have an accident within the last six months?"
 
-    # Generate Sofia's intro with OpenAI
-    gpt_response = openai.ChatCompletion.create(
-        model="gpt-4",
-        messages=[
-            {
-                "role": "system",
-                "content": (
-                    "You are Sofia, a professional claims assistant from Legal Assist. "
-                    "You speak clearly and professionally, and ask about personal injury claims. "
-                    "Ask if the caller had an accident in the last 6 months. Then end the call by saying a solicitor will call shortly."
-                )
-            },
-            {
-                "role": "user",
-                "content": "Please greet the caller and ask them if they had an accident in the last six months."
-            }
-        ]
-    )
-
-    sofia_line = gpt_response['choices'][0]['message']['content']
-
+    # Step 2: Create TwiML response
     twiml = f"""
     <Response>
-        <Say voice="Polly.Joanna" language="en-GB">
-            {sofia_line}
-        </Say>
-        <Pause length="2"/>
-        <Say voice="Polly.Joanna" language="en-GB">
-            A solicitor will call you shortly. Thank you and have a great day.
-        </Say>
-        <Hangup/>
+        <Say voice="Polly.Joanna" language="en-GB">{message} A solicitor will call you shortly. Goodbye!</Say>
     </Response>
     """
 
