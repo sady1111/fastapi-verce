@@ -1,33 +1,30 @@
 from fastapi import FastAPI, Request
+from fastapi.responses import PlainTextResponse
 import openai
-from .sheets import log_to_sheet  # Note the dot for local import
+import os
 
 app = FastAPI()
 
-openai.api_key = "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"  
+# Set your OpenAI API key here
+openai.api_key = "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"
 
-@app.post("/")
-async def handle_call(request: Request):
-    data = await request.json()
+@app.post("/call")
+async def call_handler(request: Request):
+    form = await request.form()
+    from_number = form.get("From", "Unknown")
+    user_input = form.get("SpeechResult", "No input received.")
 
-    user_input = data.get("SpeechResult", "Hello")
-
-    # Use OpenAI to generate a response
+    # AI Voice Assistant response
+    prompt = f"You are Sofia, a polite and professional personal injury assistant. The caller said: '{user_input}'. Respond like a human, naturally."
+    
     try:
-        response = openai.ChatCompletion.create(
+        ai_response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
             messages=[
-                {"role": "system", "content": "You are Sofia, a helpful legal assistant."},
-                {"role": "user", "content": user_input}
+                {"role": "system", "content": "You are Sofia, an expert in personal injury claims in the UK."},
+                {"role": "user", "content": prompt}
             ]
         )
-
-        reply = response['choices'][0]['message']['content']
-
-        # Log to Google Sheets (dummy for now)
-        log_to_sheet({"input": user_input, "reply": reply})
-
-        return {"reply": reply}
-
+        reply_text = ai_response.choices[0].message.content.strip()
     except Exception as e:
-        return {"error": str(e)}
+        rep
